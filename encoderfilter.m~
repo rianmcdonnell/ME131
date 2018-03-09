@@ -154,7 +154,7 @@ motor_pwm.Time= sig21b{10}.Time;
 
 resample_motor_pwm=resample(motor_pwm,acc_structb.Time,'linear');
 
-
+%concatenate all v, a to matrix
 for i=1:length(acc_structb.Time)
     v(i,1)=vel_structb.Data(i);
     v(i,2)=resample_motor_pwm.Data(i);
@@ -163,7 +163,6 @@ end
 A=v\acc_ave_smooth;
 
 first_order=tf([A(2)],[1 -A(1)]);
-
 v_est.Time=vel_structb.Time;
 for i=1:length(v_est.Time)
     v_est.Data(i)=(acc_ave_smooth(i)-A(2)*resample_motor_pwm.Data(i))/A(1);
@@ -171,13 +170,10 @@ end
 plot(vel_structb.Time,vel_structb.Data)
 hold on
 plot(v_est.Time,v_est.Data)
-% vdot=A(1).*v(:,1)+A(2).*v(:,2);
-% plot(v_est.Time,vdot)
-% hold on
-% plot(acc_structb.Time,acc_structb.Data)
-
-
-%concatenate all v, a to matrix
+vdot=A(1).*v(:,1)+A(2).*v(:,2);
+plot(vdot)
+hold on
+plot(vel_structb.Time,vel_structb.Data)
 
 %get transfer function
 
