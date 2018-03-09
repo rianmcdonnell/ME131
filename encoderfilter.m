@@ -60,8 +60,6 @@ encoderFL=sig21b{12};
 while l+i<length(encoderFL.Data)
         i=1;
         while encoderFL.Data(l)==encoderFL.Data(l+i) && l+i<length(encoderFL.Data)
-%         if encoderFR.Data(l)~=encoderFR.Data(l+1)
-%             v_encoderFR(l)=(encoderFR.Data(l+1)-encoderFR.Data(l))/(encoderFR.Time(l+1)-encoderFR.Time(l));
             i=i+1;
         end
         v_encoderFL.Data(l)=(((encoderFL.Data(l+i)-encoderFL.Data(l))/8)*2*pi*.025)/(encoderFL.Time(l+i)-encoderFL.Time(l));
@@ -91,26 +89,40 @@ v_encoderFL.Data=movmean(v_encoderFL.Data,sw);
 v_encoderFL.Name=v_encoderFL;
 
 %time derivative: acceleration 
-acc_encoderFR=ts_derivative(v_encoderFR);
-sw=30; 
-accFR=movmean(acc_encoderFR,sw);
+% acc_encoderFR=ts_derivative_edit(v_encoderFR);
+acc_encoderFR.Data=[];
+acc_encoderFR.Data(1)=0;
+for j=2:length(v_encoderFR.Data)
+  acc_encoderFR.Data(j)=(v_encoderFR.Data(j)-v_encoderFR.Data(j-1))/(v_encoderFR.Time(j)-v_encoderFR.Time(j-1));
+end
+acc_encoderFR.Time=v_encoderFR.Time;
 
-acc_encoderFL=ts_derivative(v_encoderFL);
-accFL=movmean(acc_encoderFL,sw);
+acc_encoderFL.Data=[];
+acc_encoderFL.Data(1)=0;
+for j=2:length(v_encoderFL.Data)
+  acc_encoderFL.Data(j)=(v_encoderFL.Data(j)-v_encoderFL.Data(j-1))/(v_encoderFL.Time(j)-v_encoderFL.Time(j-1));
+end
+acc_encoderFL.Time=v_encoderFL.Time;
+
+sw=30;
+accFR=movmean(acc_encoderFR.Data,sw);
+
+% acc_encoderFL=ts_derivative_edit(v_encoderFL);
+accFL=movmean(acc_encoderFL.Data,sw);
 
 %average acceleration for each test
-v_ave=zeros(max([length(acc_encoderFL) length(acc_encoderFR)]),1); 
-acc_ave=zeros(max([length(acc_encoderFL) length(acc_encoderFR)]),1); 
-for i=1:max([length(acc_encoderFL) length(acc_encoderFR)])
-    if i<=min([length(acc_encoderFL) length(acc_encoderFR)])
+v_ave=zeros(max([length(acc_encoderFL.Data) length(acc_encoderFR.Data)]),1); 
+acc_ave=zeros(max([length(acc_encoderFL.Data) length(acc_encoderFR.Data)]),1); 
+for i=1:max([length(acc_encoderFL.Data) length(acc_encoderFR.Data)])
+    if i<=min([length(acc_encoderFL.Data) length(acc_encoderFR.Data)])
         v_ave(i)=(v_encoderFL.Data(i)+v_encoderFR.Data(i))/2; 
-        acc_ave(i)=(acc_encoderFL(i)+acc_encoderFR(i))/2; 
+        acc_ave(i)=(acc_encoderFL.Data(i)+acc_encoderFR.Data(i))/2; 
     else
-        if length(acc_encoderFR)==max([length(acc_encoderFL) length(acc_encoderFR)])
-           acc_ave(i) = acc_encoderFR(i); 
+        if length(acc_encoderFR.Data)==max([length(acc_encoderFL.Data) length(acc_encoderFR.Data)])
+           acc_ave(i) = acc_encoderFR.Data(i); 
            v_ave(i)=v_encoderFR.Data(i);
         else
-            acc_ave(i) = acc_encoderFL(i);
+            acc_ave(i) = acc_encoderFL.Data(i);
             v_ave(i)=v_encoderFL.Data(i);
         end
     end     
